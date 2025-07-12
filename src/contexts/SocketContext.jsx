@@ -14,7 +14,7 @@ export const SocketProvider = ({ children }) => {
   useEffect(() => {
     if (user) {
       // In production, this would be your backend URL
-      const newSocket = io(process.env.REACT_APP_SERVER_URL || 'http://localhost:5000', {
+      const newSocket = io(import.meta.env.VITE_SERVER_URL || 'http://localhost:5000', {
         auth: {
           token: localStorage.getItem('accessToken')
         }
