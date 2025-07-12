@@ -1,234 +1,321 @@
 
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { motion } from 'framer-motion';
+import { useAuth } from '../contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { useAuth } from '../contexts/AuthContext';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Camera, MapPin, Calendar, Star } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Camera, Star, Package, ArrowLeftRight, Award, Edit3, Save } from 'lucide-react';
 
 const Profile = () => {
-  const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
-    bio: user?.bio || '',
-    location: user?.location || '',
-    phone: user?.phone || ''
+  const [profileData, setProfileData] = useState({
+    name: 'John Doe',
+    email: 'john@example.com',
+    phone: '+1 234 567 8900',
+    location: 'New York, NY',
+    bio: 'Fashion enthusiast who loves sustainable clothing and eco-friendly swaps.',
+    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150'
   });
 
-  const handleInputChange = (e) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success('Profile updated successfully!');
-      setIsEditing(false);
-    } catch (error) {
-      toast.error('Failed to update profile');
-    }
-  };
-
   const stats = [
-    { label: 'Items Listed', value: '12' },
-    { label: 'Successful Swaps', value: '8' },
-    { label: 'Rating', value: '4.9' },
-    { label: 'Member Since', value: '2023' }
+    { label: 'Items Listed', value: '24', icon: Package, color: 'blue' },
+    { label: 'Successful Swaps', value: '18', icon: ArrowLeftRight, color: 'green' },
+    { label: 'Points Earned', value: '420', icon: Star, color: 'yellow' },
+    { label: 'Rating', value: '4.9', icon: Award, color: 'purple' }
   ];
 
+  const recentItems = [
+    {
+      id: 1,
+      title: 'Vintage Denim Jacket',
+      image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=200',
+      status: 'available',
+      points: 85
+    },
+    {
+      id: 2,
+      title: 'Designer Sneakers',
+      image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=200',
+      status: 'swapped',
+      points: 120
+    },
+    {
+      id: 3,
+      title: 'Summer Dress',
+      image: 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=200',
+      status: 'pending',
+      points: 65
+    }
+  ];
+
+  const handleSave = () => {
+    toast.success('Profile updated successfully!');
+    setIsEditing(false);
+  };
+
+  const getStatusColor = (status) => {
+    const colors = {
+      available: 'bg-green-500/10 text-green-600',
+      swapped: 'bg-blue-500/10 text-blue-600',
+      pending: 'bg-yellow-500/10 text-yellow-600'
+    };
+    return colors[status] || colors.available;
+  };
+
+  const getStatColor = (color) => {
+    const colors = {
+      blue: 'bg-blue-500/10 text-blue-600',
+      green: 'bg-green-500/10 text-green-600',
+      yellow: 'bg-yellow-500/10 text-yellow-600',
+      purple: 'bg-purple-500/10 text-purple-600'
+    };
+    return colors[color] || colors.blue;
+  };
+
   return (
-    <div className="container-padding max-w-4xl mx-auto py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-display font-bold text-gradient mb-2">
-          Profile
-        </h1>
-        <p className="text-muted-foreground">
-          Manage your account and preferences
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Profile Overview */}
-        <div className="lg:col-span-1">
-          <Card className="glass border-white/20">
-            <CardContent className="p-6">
-              <div className="flex flex-col items-center text-center">
-                <div className="relative mb-4">
-                  <Avatar className="h-24 w-24">
-                    <AvatarImage src="/placeholder.svg" />
-                    <AvatarFallback className="text-lg bg-gradient-to-r from-purple-400 to-violet-500 text-white">
-                      {user?.name?.charAt(0).toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <Button
-                    size="icon"
-                    variant="secondary"
-                    className="absolute bottom-0 right-0 h-8 w-8 rounded-full"
-                  >
-                    <Camera className="h-4 w-4" />
-                  </Button>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-indigo-50 to-cyan-50 dark:from-gray-950 dark:via-purple-950/20 dark:to-gray-900 py-8">
+      <div className="container mx-auto px-4 max-w-6xl">
+        {/* Profile Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <Card className="backdrop-blur-xl bg-white/80 dark:bg-gray-900/80 border border-white/20 shadow-2xl shadow-purple-500/10">
+            <CardContent className="p-8">
+              <div className="flex flex-col md:flex-row items-center gap-6">
+                {/* Avatar */}
+                <div className="relative group">
+                  <img
+                    src={profileData.avatar}
+                    alt="Profile"
+                    className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
+                  />
+                  <button className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Camera className="h-6 w-6 text-white" />
+                  </button>
                 </div>
 
-                <h2 className="text-xl font-semibold mb-1">{formData.name}</h2>
-                <p className="text-muted-foreground mb-4">{formData.email}</p>
-
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-                  <MapPin className="h-4 w-4" />
-                  <span>{formData.location || 'Location not set'}</span>
-                </div>
-
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
-                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                  <span>4.9/5 rating</span>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 w-full">
-                  {stats.map((stat, index) => (
-                    <div key={index} className="text-center">
-                      <p className="text-lg font-semibold">{stat.value}</p>
-                      <p className="text-xs text-muted-foreground">{stat.label}</p>
+                {/* Profile Info */}
+                <div className="flex-1 text-center md:text-left">
+                  <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                    {profileData.name}
+                  </h1>
+                  <p className="text-gray-600 dark:text-gray-400 mb-4">
+                    {profileData.bio}
+                  </p>
+                  <div className="flex flex-wrap gap-4 justify-center md:justify-start text-sm text-gray-600 dark:text-gray-400">
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-4 w-4" />
+                      <span>{profileData.email}</span>
                     </div>
-                  ))}
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-4 w-4" />
+                      <span>{profileData.phone}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4" />
+                      <span>{profileData.location}</span>
+                    </div>
+                  </div>
                 </div>
+
+                {/* Edit Button */}
+                <Button
+                  onClick={() => setIsEditing(!isEditing)}
+                  variant={isEditing ? "default" : "outline"}
+                  className="h-12 px-6"
+                >
+                  {isEditing ? (
+                    <>
+                      <Save className="h-4 w-4 mr-2" />
+                      Save Changes
+                    </>
+                  ) : (
+                    <>
+                      <Edit3 className="h-4 w-4 mr-2" />
+                      Edit Profile
+                    </>
+                  )}
+                </Button>
               </div>
             </CardContent>
           </Card>
-        </div>
+        </motion.div>
 
-        {/* Profile Details */}
-        <div className="lg:col-span-2">
-          <Card className="glass border-white/20">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Profile Information</CardTitle>
-                <CardDescription>Update your personal information</CardDescription>
-              </div>
-              <Button
-                variant="outline"
-                onClick={() => setIsEditing(!isEditing)}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Edit Form */}
+            {isEditing && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
               >
-                {isEditing ? 'Cancel' : 'Edit Profile'}
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Name</Label>
-                    <Input
-                      id="name"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone</Label>
-                    <Input
-                      id="phone"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      disabled={!isEditing}
-                      placeholder="Your phone number"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="location">Location</Label>
-                    <Input
-                      id="location"
-                      name="location"
-                      value={formData.location}
-                      onChange={handleInputChange}
-                      disabled={!isEditing}
-                      placeholder="Your city or area"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="bio">Bio</Label>
-                  <Textarea
-                    id="bio"
-                    name="bio"
-                    value={formData.bio}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    placeholder="Tell others about yourself and your style..."
-                    rows={4}
-                  />
-                </div>
-
-                {isEditing && (
-                  <div className="flex justify-end space-x-4">
-                    <Button type="submit" className="gradient-primary text-white">
+                <Card className="backdrop-blur-xl bg-white/80 dark:bg-gray-900/80 border border-white/20">
+                  <CardHeader>
+                    <CardTitle>Edit Profile</CardTitle>
+                    <CardDescription>Update your personal information</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="name">Full Name</Label>
+                        <Input
+                          id="name"
+                          value={profileData.name}
+                          onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
+                          className="h-12"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          value={profileData.email}
+                          onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
+                          className="h-12"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="phone">Phone</Label>
+                        <Input
+                          id="phone"
+                          value={profileData.phone}
+                          onChange={(e) => setProfileData(prev => ({ ...prev, phone: e.target.value }))}
+                          className="h-12"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="location">Location</Label>
+                        <Input
+                          id="location"
+                          value={profileData.location}
+                          onChange={(e) => setProfileData(prev => ({ ...prev, location: e.target.value }))}
+                          className="h-12"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="bio">Bio</Label>
+                      <textarea
+                        id="bio"
+                        value={profileData.bio}
+                        onChange={(e) => setProfileData(prev => ({ ...prev, bio: e.target.value }))}
+                        rows={3}
+                        className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50"
+                      />
+                    </div>
+                    <Button onClick={handleSave} className="w-full h-12">
                       Save Changes
                     </Button>
-                  </div>
-                )}
-              </form>
-            </CardContent>
-          </Card>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
 
-          {/* Recent Activity */}
-          <Card className="glass border-white/20 mt-6">
-            <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-              <CardDescription>Your latest actions on ReWear</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-start space-x-3">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
-                  <div>
-                    <p className="text-sm font-medium">Completed swap with Sarah M.</p>
-                    <p className="text-xs text-muted-foreground">2 hours ago</p>
+            {/* Recent Items */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <Card className="backdrop-blur-xl bg-white/80 dark:bg-gray-900/80 border border-white/20">
+                <CardHeader>
+                  <CardTitle>Recent Items</CardTitle>
+                  <CardDescription>Your latest clothing listings</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {recentItems.map((item, index) => (
+                      <motion.div
+                        key={item.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 * index }}
+                        className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/20 dark:to-pink-900/20 p-4 hover:shadow-lg transition-all duration-300"
+                      >
+                        <img
+                          src={item.image}
+                          alt={item.title}
+                          className="w-full h-32 object-cover rounded-lg mb-3"
+                        />
+                        <h3 className="font-medium text-gray-900 dark:text-white mb-2">{item.title}</h3>
+                        <div className="flex items-center justify-between">
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(item.status)}`}>
+                            {item.status}
+                          </span>
+                          <span className="text-sm font-medium text-purple-600">{item.points} pts</span>
+                        </div>
+                      </motion.div>
+                    ))}
                   </div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-                  <div>
-                    <p className="text-sm font-medium">Listed new item: Summer Floral Dress</p>
-                    <p className="text-xs text-muted-foreground">1 day ago</p>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
+
+          {/* Right Column - Stats */}
+          <div className="space-y-6">
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <Card className="backdrop-blur-xl bg-white/80 dark:bg-gray-900/80 border border-white/20">
+                <CardHeader>
+                  <CardTitle>Profile Stats</CardTitle>
+                  <CardDescription>Your activity overview</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {stats.map((stat, index) => (
+                    <motion.div
+                      key={stat.label}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.1 * index }}
+                      className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${getStatColor(stat.color)}`}>
+                          <stat.icon className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white">{stat.value}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">{stat.label}</p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Achievement Badge */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <Card className="backdrop-blur-xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-200/50 dark:border-purple-800/50">
+                <CardContent className="p-6 text-center">
+                  <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Award className="h-8 w-8 text-white" />
                   </div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
-                  <div>
-                    <p className="text-sm font-medium">Received 5-star rating from Emma L.</p>
-                    <p className="text-xs text-muted-foreground">3 days ago</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Eco Warrior</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Congratulations! You've saved 15 items from landfills through sustainable swapping.
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
         </div>
       </div>
     </div>
