@@ -24,6 +24,9 @@ import Navbar from "./components/layout/Navbar";
 import Footer from "./components/layout/Footer";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
+// Admin
+import AdminRoutes from "./routes/AdminRoutes";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -43,40 +46,62 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <div className="min-h-screen bg-background text-foreground">
-                <Navbar />
-                <main className="flex-1">
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<Register />} />
-                    <Route path="/browse" element={<Browse />} />
-                    
-                    {/* Protected Routes */}
-                    <Route path="/dashboard" element={
-                      <ProtectedRoute>
+                <Routes>
+                  {/* Main App Routes */}
+                  <Route path="/" element={<Index />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route path="/browse" element={
+                    <>
+                      <Navbar />
+                      <Browse />
+                      <Footer />
+                    </>
+                  } />
+                  
+                  {/* Protected Routes */}
+                  <Route path="/dashboard" element={
+                    <ProtectedRoute>
+                      <>
+                        <Navbar />
                         <Dashboard />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/add-item" element={
-                      <ProtectedRoute>
+                        <Footer />
+                      </>
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/add-item" element={
+                    <ProtectedRoute>
+                      <>
+                        <Navbar />
                         <AddItem />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/profile" element={
-                      <ProtectedRoute>
+                        <Footer />
+                      </>
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/profile" element={
+                    <ProtectedRoute>
+                      <>
+                        <Navbar />
                         <Profile />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/swaps" element={
-                      <ProtectedRoute>
+                        <Footer />
+                      </>
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/swaps" element={
+                    <ProtectedRoute>
+                      <>
+                        <Navbar />
                         <SwapHistory />
-                      </ProtectedRoute>
-                    } />
-                    
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </main>
-                <Footer />
+                        <Footer />
+                      </>
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Admin Routes */}
+                  <Route path="/admin/*" element={<AdminRoutes />} />
+                  
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
               </div>
             </BrowserRouter>
           </TooltipProvider>
