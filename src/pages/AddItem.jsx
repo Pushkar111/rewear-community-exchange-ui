@@ -1,17 +1,26 @@
 
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { Plus, X, Upload } from 'lucide-react';
+import { toast } from 'sonner';
+import { 
+  Upload,
+  X,
+  Plus,
+  Camera,
+  Tag,
+  Package,
+  Info,
+  Star,
+  MapPin
+} from 'lucide-react';
 
 const AddItem = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -19,286 +28,353 @@ const AddItem = () => {
     size: '',
     condition: '',
     brand: '',
-    color: ''
+    color: '',
+    tags: [],
+    images: []
   });
-  const [tags, setTags] = useState([]);
-  const [newTag, setNewTag] = useState('');
-  const [images, setImages] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
+  const [currentTag, setCurrentTag] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleInputChange = (e) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }));
+  const categories = [
+    'dresses', 'tops', 'pants', 'shoes', 'accessories', 'outerwear', 'activewear', 'undergarments'
+  ];
+
+  const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'One Size'];
+  const conditions = ['New', 'Like New', 'Excellent', 'Good', 'Fair'];
+  const colors = ['Black', 'White', 'Gray', 'Brown', 'Blue', 'Red', 'Green', 'Yellow', 'Pink', 'Purple', 'Orange', 'Multicolor'];
+
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSelectChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const addTag = () => {
-    if (newTag.trim() && !tags.includes(newTag.trim())) {
-      setTags(prev => [...prev, newTag.trim()]);
-      setNewTag('');
+  const handleImageUpload = (event) => {
+    const files = Array.from(event.target.files);
+    if (formData.images.length + files.length > 5) {
+      toast.error('Maximum 5 images allowed');
+      return;
     }
-  };
 
-  const removeTag = (tagToRemove) => {
-    setTags(prev => prev.filter(tag => tag !== tagToRemove));
-  };
-
-  const handleImageUpload = (e) => {
-    const files = Array.from(e.target.files);
-    // In a real app, you'd upload to a service like Cloudinary
     files.forEach(file => {
       const reader = new FileReader();
       reader.onload = (e) => {
-        setImages(prev => [...prev, e.target.result]);
+        setFormData(prev => ({
+          ...prev,
+          images: [...prev.images, { file, preview: e.target.result, id: Date.now() + Math.random() }]
+        }));
       };
       reader.readAsDataURL(file);
     });
   };
 
-  const removeImage = (index) => {
-    setImages(prev => prev.filter((_, i) => i !== index));
+  const removeImage = (imageId) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter(img => img.id !== imageId)
+    }));
+  };
+
+  const addTag = () => {
+    if (currentTag.trim() && !formData.tags.includes(currentTag.trim().toLowerCase())) {
+      setFormData(prev => ({
+        ...prev,
+        tags: [...prev.tags, currentTag.trim().toLowerCase()]
+      }));
+      setCurrentTag('');
+    }
+  };
+
+  const removeTag = (tagToRemove) => {
+    setFormData(prev => ({
+      ...prev,
+      tags: prev.tags.filter(tag => tag !== tagToRemove)
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
+    
+    if (!formData.title || !formData.description || !formData.category || !formData.size || !formData.condition) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    if (formData.images.length === 0) {
+      toast.error('Please add at least one image');
+      return;
+    }
+
+    setIsSubmitting(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Mock API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
       toast.success('Item added successfully!');
       navigate('/dashboard');
     } catch (error) {
-      toast.error('Failed to add item');
+      toast.error('Failed to add item. Please try again.');
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="container-padding max-w-4xl mx-auto py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-display font-bold text-gradient mb-2">
-          Add New Item
-        </h1>
-        <p className="text-muted-foreground">
-          Share your preloved items with the community
-        </p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="container-padding max-w-4xl mx-auto py-8">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-display font-bold text-gradient mb-4">
+            Add New Item
+          </h1>
+          <p className="text-xl text-muted-foreground">
+            Share your fashion treasures with the community
+          </p>
+        </div>
 
-      <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Basic Information */}
-        <Card className="glass border-white/20">
-          <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
-            <CardDescription>Tell us about your item</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Images Upload */}
+          <Card className="glass border-white/20">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Camera className="h-5 w-5 mr-2" />
+                Photos
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Add up to 5 high-quality photos of your item
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                {formData.images.map((image) => (
+                  <div key={image.id} className="relative group">
+                    <img
+                      src={image.preview}
+                      alt="Preview"
+                      className="w-full h-32 object-cover rounded-lg"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => removeImage(image.id)}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ))}
+                
+                {formData.images.length < 5 && (
+                  <label className="border-2 border-dashed border-muted-foreground/25 rounded-lg h-32 flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors">
+                    <Upload className="h-6 w-6 text-muted-foreground mb-2" />
+                    <span className="text-sm text-muted-foreground">Add Photo</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={handleImageUpload}
+                    />
+                  </label>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Basic Information */}
+          <Card className="glass border-white/20">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Info className="h-5 w-5 mr-2" />
+                Basic Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="title">Title *</Label>
+                  <Input
+                    id="title"
+                    placeholder="e.g., Vintage Floral Summer Dress"
+                    value={formData.title}
+                    onChange={(e) => handleInputChange('title', e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="brand">Brand</Label>
+                  <Input
+                    id="brand"
+                    placeholder="e.g., Zara, H&M, Vintage"
+                    value={formData.brand}
+                    onChange={(e) => handleInputChange('brand', e.target.value)}
+                  />
+                </div>
+              </div>
+
               <div className="space-y-2">
-                <Label htmlFor="title">Item Title *</Label>
-                <Input
-                  id="title"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleInputChange}
-                  placeholder="e.g., Vintage Leather Jacket"
+                <Label htmlFor="description">Description *</Label>
+                <textarea
+                  id="description"
+                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  placeholder="Describe your item in detail..."
+                  value={formData.description}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
                   required
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="brand">Brand</Label>
-                <Input
-                  id="brand"
-                  name="brand"
-                  value={formData.brand}
-                  onChange={handleInputChange}
-                  placeholder="e.g., Zara, H&M, Nike"
-                />
-              </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description">Description *</Label>
-              <Textarea
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                placeholder="Describe your item's condition, style, and any special details..."
-                rows={4}
-                required
-              />
-            </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <Label>Category *</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {categories.map((category) => (
+                      <Button
+                        key={category}
+                        type="button"
+                        variant={formData.category === category ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handleInputChange('category', category)}
+                        className="capitalize text-xs"
+                      >
+                        {category}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label>Category *</Label>
-                <Select onValueChange={(value) => handleSelectChange('category', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="clothing">Clothing</SelectItem>
-                    <SelectItem value="shoes">Shoes</SelectItem>
-                    <SelectItem value="accessories">Accessories</SelectItem>
-                    <SelectItem value="bags">Bags</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                <div className="space-y-2">
+                  <Label>Size *</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {sizes.map((size) => (
+                      <Button
+                        key={size}
+                        type="button"
+                        variant={formData.size === size ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handleInputChange('size', size)}
+                        className="text-xs"
+                      >
+                        {size}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
 
-              <div className="space-y-2">
-                <Label>Size *</Label>
-                <Select onValueChange={(value) => handleSelectChange('size', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select size" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="xs">XS</SelectItem>
-                    <SelectItem value="s">S</SelectItem>
-                    <SelectItem value="m">M</SelectItem>
-                    <SelectItem value="l">L</SelectItem>
-                    <SelectItem value="xl">XL</SelectItem>
-                    <SelectItem value="xxl">XXL</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="space-y-2">
+                  <Label>Color</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {colors.map((color) => (
+                      <Button
+                        key={color}
+                        type="button"
+                        variant={formData.color === color ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handleInputChange('color', color)}
+                        className="text-xs"
+                      >
+                        {color}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-2">
                 <Label>Condition *</Label>
-                <Select onValueChange={(value) => handleSelectChange('condition', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select condition" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="new">New with tags</SelectItem>
-                    <SelectItem value="like-new">Like new</SelectItem>
-                    <SelectItem value="excellent">Excellent</SelectItem>
-                    <SelectItem value="good">Good</SelectItem>
-                    <SelectItem value="fair">Fair</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Images */}
-        <Card className="glass border-white/20">
-          <CardHeader>
-            <CardTitle>Photos</CardTitle>
-            <CardDescription>Add photos to showcase your item</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                  id="image-upload"
-                />
-                <label htmlFor="image-upload" className="cursor-pointer">
-                  <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">
-                    Click to upload images or drag and drop
-                  </p>
-                </label>
-              </div>
-
-              {images.length > 0 && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {images.map((image, index) => (
-                    <div key={index} className="relative group">
-                      <img
-                        src={image}
-                        alt={`Upload ${index + 1}`}
-                        className="w-full h-24 object-cover rounded-lg"
-                      />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={() => removeImage(index)}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
+                <div className="flex flex-wrap gap-2">
+                  {conditions.map((condition) => (
+                    <Button
+                      key={condition}
+                      type="button"
+                      variant={formData.condition === condition ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => handleInputChange('condition', condition)}
+                    >
+                      <Star className="h-3 w-3 mr-1" />
+                      {condition}
+                    </Button>
                   ))}
                 </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Tags */}
-        <Card className="glass border-white/20">
-          <CardHeader>
-            <CardTitle>Tags</CardTitle>
-            <CardDescription>Add tags to help others find your item</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex gap-2">
+          {/* Tags */}
+          <Card className="glass border-white/20">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Tag className="h-5 w-5 mr-2" />
+                Tags
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Add tags to help others find your item
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex space-x-2">
                 <Input
-                  value={newTag}
-                  onChange={(e) => setNewTag(e.target.value)}
                   placeholder="Add a tag..."
+                  value={currentTag}
+                  onChange={(e) => setCurrentTag(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
                 />
-                <Button type="button" onClick={addTag} variant="outline">
+                <Button type="button" onClick={addTag} size="icon">
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
-
-              {tags.length > 0 && (
+              
+              {formData.tags.length > 0 && (
                 <div className="flex flex-wrap gap-2">
-                  {tags.map((tag, index) => (
-                    <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                      {tag}
-                      <X
-                        className="h-3 w-3 cursor-pointer hover:text-destructive"
+                  {formData.tags.map((tag) => (
+                    <Badge key={tag} variant="secondary" className="flex items-center space-x-1">
+                      <span>#{tag}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
                         onClick={() => removeTag(tag)}
-                      />
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
                     </Badge>
                   ))}
                 </div>
               )}
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        {/* Submit Button */}
-        <div className="flex justify-end space-x-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate('/dashboard')}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            className="gradient-primary text-white"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Adding Item...' : 'Add Item'}
-          </Button>
-        </div>
-      </form>
+          {/* Submit */}
+          <div className="flex justify-end space-x-4">
+            <Button 
+              type="button" 
+              variant="outline"
+              onClick={() => navigate('/dashboard')}
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              className="gradient-primary text-white hover:opacity-90"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                  Adding Item...
+                </>
+              ) : (
+                <>
+                  <Package className="h-4 w-4 mr-2" />
+                  Add Item
+                </>
+              )}
+            </Button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

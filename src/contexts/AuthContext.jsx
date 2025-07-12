@@ -1,139 +1,134 @@
 
-import { createContext, useContext, useReducer, useEffect } from 'react';
-import { authAPI } from '../services/api';
+import { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
 const AuthContext = createContext();
 
-const authReducer = (state, action) => {
-  switch (action.type) {
-    case 'SET_LOADING':
-      return { ...state, loading: action.payload };
-    case 'SET_USER':
-      return { ...state, user: action.payload, isAuthenticated: !!action.payload };
-    case 'SET_ERROR':
-      return { ...state, error: action.payload };
-    case 'LOGOUT':
-      return { ...state, user: null, isAuthenticated: false, error: null };
-    default:
-      return state;
-  }
-};
-
 export const AuthProvider = ({ children }) => {
-  const [state, dispatch] = useReducer(authReducer, {
-    user: null,
-    isAuthenticated: false,
-    loading: true,
-    error: null,
-  });
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
+  // Mock authentication - in real app this would connect to your backend
   useEffect(() => {
-    checkAuthStatus();
+    const token = localStorage.getItem('accessToken');
+    const userData = localStorage.getItem('userData');
+    
+    if (token && userData) {
+      try {
+        setUser(JSON.parse(userData));
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('userData');
+      }
+    }
+    
+    setLoading(false);
   }, []);
 
-  const checkAuthStatus = async () => {
+  const login = async (email, password) => {
     try {
-      const token = localStorage.getItem('accessToken');
-      if (token) {
-        const response = await authAPI.getProfile();
-        dispatch({ type: 'SET_USER', payload: response.data.user });
-      }
+      setLoading(true);
+      
+      // Mock API call - replace with real authentication
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const mockUser = {
+        id: 1,
+        name: email.split('@')[0],
+        email: email,
+        avatar: null,
+        joinDate: new Date().toISOString(),
+        totalSwaps: 0,
+        rating: 5.0
+      };
+      
+      const mockToken = 'mock-jwt-token-' + Date.now();
+      
+      localStorage.setItem('accessToken', mockToken);
+      localStorage.setItem('userData', JSON.stringify(mockUser));
+      
+      setUser(mockUser);
+      toast.success('Successfully logged in!');
+      
+      return { success: true };
     } catch (error) {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
+      toast.error('Login failed. Please try again.');
+      return { success: false, error: error.message };
     } finally {
-      dispatch({ type: 'SET_LOADING', payload: false });
-    }
-  };
-
-  const login = async (credentials, method = 'email') => {
-    try {
-      dispatch({ type: 'SET_LOADING', payload: true });
-      dispatch({ type: 'SET_ERROR', payload: null });
-
-      let response;
-      if (method === 'email') {
-        response = await authAPI.loginWithEmail(credentials);
-      } else if (method === 'mobile') {
-        response = await authAPI.loginWithMobile(credentials);
-      } else if (method === 'otp') {
-        response = await authAPI.verifyOTP(credentials);
-      }
-
-      const { user, accessToken, refreshToken } = response.data;
-      
-      localStorage.setItem('accessToken', accessToken);
-      localStorage.setItem('refreshToken', refreshToken);
-      
-      dispatch({ type: 'SET_USER', payload: user });
-      toast.success('Login successful!');
-      
-      return { success: true, user };
-    } catch (error) {
-      const message = error.response?.data?.message || 'Login failed';
-      dispatch({ type: 'SET_ERROR', payload: message });
-      toast.error(message);
-      return { success: false, error: message };
-    } finally {
-      dispatch({ type: 'SET_LOADING', payload: false });
+      setLoading(false);
     }
   };
 
   const register = async (userData) => {
     try {
-      dispatch({ type: 'SET_LOADING', payload: true });
-      dispatch({ type: 'SET_ERROR', payload: null });
-
-      const response = await authAPI.register(userData);
-      toast.success('Registration successful! Please verify your account.');
+      setLoading(true);
       
-      return { success: true, data: response.data };
+      // Mock API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const newUser = {
+        id: Date.now(),
+        name: userData.name,
+        email: userData.email,
+        avatar: null,
+        joinDate: new Date().toISOString(),
+        totalSwaps: 0,
+        rating: 5.0
+      };
+      
+      const mockToken = 'mock-jwt-token-' + Date.now();
+      
+      localStorage.setItem('accessToken', mockToken);
+      localStorage.setItem('userData', JSON.stringify(newUser));
+      
+      setUser(newUser);
+      toast.success('Account created successfully!');
+      
+      return { success: true };
     } catch (error) {
-      const message = error.response?.data?.message || 'Registration failed';
-      dispatch({ type: 'SET_ERROR', payload: message });
-      toast.error(message);
-      return { success: false, error: message };
+      toast.error('Registration failed. Please try again.');
+      return { success: false, error: error.message };
     } finally {
-      dispatch({ type: 'SET_LOADING', payload: false });
+      setLoading(false);
     }
   };
 
-  const logout = async () => {
-    try {
-      await authAPI.logout();
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      dispatch({ type: 'LOGOUT' });
-      toast.success('Logged out successfully');
-    }
+  const logout = () => {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('userData');
+    setUser(null);
+    toast.success('Logged out successfully');
   };
 
-  const sendOTP = async (contact, type = 'email') => {
+  const updateProfile = async (profileData) => {
     try {
-      dispatch({ type: 'SET_LOADING', payload: true });
-      const response = await authAPI.sendOTP({ contact, type });
-      toast.success(`OTP sent to your ${type}`);
-      return { success: true, data: response.data };
+      setLoading(true);
+      
+      // Mock API call
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const updatedUser = { ...user, ...profileData };
+      localStorage.setItem('userData', JSON.stringify(updatedUser));
+      setUser(updatedUser);
+      
+      toast.success('Profile updated successfully!');
+      return { success: true };
     } catch (error) {
-      const message = error.response?.data?.message || 'Failed to send OTP';
-      toast.error(message);
-      return { success: false, error: message };
+      toast.error('Failed to update profile');
+      return { success: false, error: error.message };
     } finally {
-      dispatch({ type: 'SET_LOADING', payload: false });
+      setLoading(false);
     }
   };
 
   const value = {
-    ...state,
+    user,
     login,
     register,
     logout,
-    sendOTP,
-    checkAuthStatus
+    updateProfile,
+    loading
   };
 
   return (

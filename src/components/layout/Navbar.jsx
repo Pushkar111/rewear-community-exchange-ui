@@ -1,269 +1,219 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { useSocket } from '../../contexts/SocketContext';
 import { 
   Menu, 
   X, 
   Sun, 
   Moon, 
-  Bell, 
   User, 
   LogOut, 
-  Settings,
   Plus,
-  Search
+  Search,
+  Bell,
+  ShoppingBag,
+  Settings,
+  Heart
 } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const { notifications } = useSocket();
   const location = useLocation();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  const isActive = (path) => location.pathname === path;
 
-  const unreadNotifications = notifications.filter(n => !n.read).length;
-
-  const handleLogout = async () => {
-    await logout();
+  const handleLogout = () => {
+    logout();
     navigate('/');
   };
 
   const navLinks = [
-    { name: 'Browse', path: '/browse' },
-    { name: 'How it Works', path: '/#how-it-works' },
-    { name: 'About', path: '/#about' },
+    { name: 'Browse', path: '/browse', icon: Search },
+    { name: 'Add Item', path: '/add-item', icon: Plus, protected: true },
+    { name: 'Dashboard', path: '/dashboard', icon: ShoppingBag, protected: true },
+    { name: 'Swaps', path: '/swaps', icon: Heart, protected: true },
   ];
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-      scrolled 
-        ? 'glass backdrop-blur-lg border-b border-white/20 shadow-lg' 
-        : 'bg-transparent'
-    }`}>
+    <nav className="sticky top-0 z-50 glass border-b border-white/20 backdrop-blur-xl">
       <div className="container-padding max-w-7xl mx-auto">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-violet-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">R</span>
+          <Link to="/" className="flex items-center space-x-2 hover-lift">
+            <div className="w-8 h-8 gradient-primary rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-lg">R</span>
             </div>
-            <span className="text-xl font-display font-bold text-gradient">
-              ReWear
-            </span>
+            <span className="text-xl font-display font-bold text-gradient">ReWear</span>
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                to={link.path}
-                className={`text-sm font-medium transition-colors hover:text-primary ${
-                  location.pathname === link.path
-                    ? 'text-primary'
-                    : 'text-muted-foreground'
-                }`}
-              >
-                {link.name}
-              </Link>
-            ))}
+            {navLinks.map((link) => {
+              if (link.protected && !user) return null;
+              const Icon = link.icon;
+              return (
+                <Link
+                  key={link.name}
+                  to={link.path}
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${
+                    isActive(link.path)
+                      ? 'bg-primary/10 text-primary font-medium'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span>{link.name}</span>
+                </Link>
+              );
+            })}
           </div>
 
-          {/* Desktop Actions */}
+          {/* Right Side Actions */}
           <div className="hidden md:flex items-center space-x-4">
+            {/* Theme Toggle */}
             <Button
               variant="ghost"
               size="icon"
               onClick={toggleTheme}
-              className="hover:bg-white/10"
+              className="hover:bg-muted/50"
             >
-              {theme === 'dark' ? (
-                <Sun className="h-5 w-5" />
-              ) : (
-                <Moon className="h-5 w-5" />
-              )}
+              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
 
             {user ? (
-              <>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="relative hover:bg-white/10"
-                >
-                  <Bell className="h-5 w-5" />
-                  {unreadNotifications > 0 && (
-                    <Badge
-                      variant="destructive"
-                      className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs p-0"
-                    >
-                      {unreadNotifications}
-                    </Badge>
-                  )}
+              <div className="flex items-center space-x-4">
+                {/* Notifications */}
+                <Button variant="ghost" size="icon" className="relative hover:bg-muted/50">
+                  <Bell className="h-4 w-4" />
+                  <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs bg-red-500">
+                    3
+                  </Badge>
                 </Button>
 
-                <Button
-                  onClick={() => navigate('/add-item')}
-                  className="gradient-primary text-white hover:opacity-90"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Item
-                </Button>
-
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                      <div className="h-8 w-8 rounded-full bg-gradient-to-r from-purple-400 to-violet-500 flex items-center justify-center">
-                        <span className="text-white text-sm font-medium">
-                          {user.name?.charAt(0).toUpperCase() || 'U'}
-                        </span>
-                      </div>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56 glass border-white/20" align="end">
-                    <div className="flex items-center justify-start gap-2 p-2">
-                      <div className="flex flex-col space-y-1 leading-none">
-                        <p className="font-medium">{user.name}</p>
-                        <p className="text-xs text-muted-foreground">{user.email}</p>
-                      </div>
+                {/* Profile Menu */}
+                <div className="flex items-center space-x-2">
+                  <Link
+                    to="/profile"
+                    className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="w-8 h-8 gradient-secondary rounded-full flex items-center justify-center">
+                      <User className="h-4 w-4 text-white" />
                     </div>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => navigate('/dashboard')}>
-                      <User className="mr-2 h-4 w-4" />
-                      Dashboard
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate('/profile')}>
-                      <Settings className="mr-2 h-4 w-4" />
-                      Profile
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout}>
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Log out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </>
+                    <span className="font-medium">{user.name || 'User'}</span>
+                  </Link>
+                  
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleLogout}
+                    className="hover:bg-destructive/10 hover:text-destructive"
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
             ) : (
               <div className="flex items-center space-x-3">
-                <Button
-                  variant="ghost"
-                  onClick={() => navigate('/login')}
-                  className="text-foreground hover:bg-white/10"
-                >
-                  Sign In
-                </Button>
-                <Button
-                  onClick={() => navigate('/register')}
-                  className="gradient-primary text-white hover:opacity-90"
-                >
-                  Sign Up
-                </Button>
+                <Link to="/login">
+                  <Button variant="ghost">Login</Button>
+                </Link>
+                <Link to="/register">
+                  <Button className="gradient-primary text-white hover:opacity-90">
+                    Sign Up
+                  </Button>
+                </Link>
               </div>
             )}
           </div>
 
-          {/* Mobile menu button */}
-          <div className="md:hidden">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsOpen(!isOpen)}
-              className="hover:bg-white/10"
-            >
-              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </Button>
-          </div>
+          {/* Mobile Menu Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            onClick={() => setIsOpen(!isOpen)}
+          >
+            {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </Button>
         </div>
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="md:hidden mt-4 pb-4 glass rounded-lg border border-white/20">
-            <div className="flex flex-col space-y-4 p-4">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.name}
-                  to={link.path}
-                  className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  {link.name}
-                </Link>
-              ))}
+          <div className="md:hidden pb-4 pt-2 border-t border-white/10">
+            <div className="flex flex-col space-y-2">
+              {navLinks.map((link) => {
+                if (link.protected && !user) return null;
+                const Icon = link.icon;
+                return (
+                  <Link
+                    key={link.name}
+                    to={link.path}
+                    onClick={() => setIsOpen(false)}
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                      isActive(link.path)
+                        ? 'bg-primary/10 text-primary font-medium'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                    }`}
+                  >
+                    <Icon className="h-5 w-5" />
+                    <span>{link.name}</span>
+                  </Link>
+                );
+              })}
               
-              <div className="flex items-center justify-between pt-4 border-t border-white/20">
+              <div className="flex items-center justify-between px-4 py-3">
+                <span className="text-sm text-muted-foreground">Theme</span>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={toggleTheme}
-                  className="hover:bg-white/10"
+                  className="hover:bg-muted/50"
                 >
-                  {theme === 'dark' ? (
-                    <Sun className="h-5 w-5" />
-                  ) : (
-                    <Moon className="h-5 w-5" />
-                  )}
+                  {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                 </Button>
+              </div>
 
-                {user ? (
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      onClick={() => navigate('/add-item')}
-                      className="gradient-primary text-white text-sm"
-                      size="sm"
+              {user ? (
+                <div className="px-4 py-2 border-t border-white/10 mt-2 pt-4">
+                  <div className="flex items-center justify-between">
+                    <Link
+                      to="/profile"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center space-x-3 flex-1 py-2"
                     >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Add Item
-                    </Button>
+                      <div className="w-8 h-8 gradient-secondary rounded-full flex items-center justify-center">
+                        <User className="h-4 w-4 text-white" />
+                      </div>
+                      <span className="font-medium">{user.name || 'User'}</span>
+                    </Link>
+                    
                     <Button
-                      onClick={handleLogout}
                       variant="ghost"
-                      size="sm"
+                      size="icon"
+                      onClick={handleLogout}
+                      className="hover:bg-destructive/10 hover:text-destructive"
                     >
                       <LogOut className="h-4 w-4" />
                     </Button>
                   </div>
-                ) : (
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => navigate('/login')}
-                    >
-                      Sign In
-                    </Button>
-                    <Button
-                      onClick={() => navigate('/register')}
-                      className="gradient-primary text-white"
-                      size="sm"
-                    >
-                      Sign Up
-                    </Button>
-                  </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="px-4 py-2 border-t border-white/10 mt-2 pt-4 space-y-2">
+                  <Link to="/login" onClick={() => setIsOpen(false)}>
+                    <Button variant="outline" className="w-full">Login</Button>
+                  </Link>
+                  <Link to="/register" onClick={() => setIsOpen(false)}>
+                    <Button className="w-full gradient-primary text-white">Sign Up</Button>
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         )}
